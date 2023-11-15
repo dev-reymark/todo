@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TODO</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 0 50px;
+        background-color: #ffffff;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .app {
+        background-color: #fff;
+        width: 370px;
+        height: 500px;
+        border: 5px solid #5150ff;
+        border-radius: 8px;
+        padding: 16px;
+        overflow-y: scroll;
+      }
+
+      .app::-webkit-scrollbar {
+        width: 0 !important;
+      }
+
+      .filter-sort {
+        margin-bottom: 10px;
+      }
+
+      #addNew {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: rgb(161 171 206 / 35%);
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      .fa-plus {
+        background-color: #5150ff;
+        padding: 5px;
+        border-radius: 5px;
+        color: #fff;
+      }
+      .filter-sort i {
+        cursor: pointer;
+        margin-left: 10px; /* Adjust the spacing */
+      }
+
+      #tasks {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+
+      #tasks div {
+        position: relative;
+        border: 3px solid #5150ff;
+        background-color: #5150ff2b;
+        border-radius: 6px;
+        padding: 8px;
+        display: grid;
+        gap: 5px;
+        margin-bottom: 14px;
+      }
+
+      #tasks div .badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin: 5px;
+      }
+
+      #tasks div .options {
+        justify-self: center;
+        display: flex;
+        gap: 20px;
+      }
+
+      #tasks div .options i {
+        cursor: pointer;
+      }
+
+      #msg {
+        color: red;
+      }
+      select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #fff;
+        color: #333;
+        cursor: pointer;
+        outline: none;
+      }
+
+      option {
+        background-color: #fff;
+        color: #333;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app">
+      <h4 class="mb-3">TODO APP</h4>
+
+      <div class="filter-sort">
+        <!-- Replace the labels with icons -->
+        <i class="fas fa-filter"></i>
+        <select id="filter" onchange="filterTasks()">
+          <option value="all">All</option>
+          <option value="personal">Personal</option>
+          <option value="work">Work</option>
+        </select>
+
+        <i class="fas fa-sort"></i>
+        <select id="sort" onchange="sortTasks()">
+          <option value="date">Due Date</option>
+          <option value="priority">Priority</option>
+        </select>
+      </div>
+        <i class="fas fa-trash-alt" onclick="deleteAllTasks()"></i>
+ 
+
+      <div id="addNew" data-bs-toggle="modal" data-bs-target="#form">
+        <span>Add New Task</span>
+        <i class="fas fa-plus"></i>
+      </div>
+
+      <!-- Modal -->
+      <form
+        class="modal fade"
+        id="form"
+        tabindex="-1"
+        aria-labelledby="exampleModalLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Add New Task</h5>
+            </div>
+            <div class="modal-body">
+              <p>Task Title</p>
+              <input type="text" class="form-control" name="" id="textInput" />
+              <div id="msg"></div>
+              <br />
+              <p>Category</p>
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="category"
+                  id="personal"
+                  value="personal"
+                  checked
+                />
+                <label class="form-check-label" for="personal">
+                  Personal
+                </label>
+              </div>
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="category"
+                  id="work"
+                  value="work"
+                />
+                <label class="form-check-label" for="work"> Work </label>
+              </div>
+              <br />
+              <p>Due Date</p>
+              <input type="date" class="form-control" name="" id="dateInput" />
+              <br />
+              <p>Priority</p>
+              <input type="checkbox" id="priorityCheckbox" />
+              <br />
+              <p>Description</p>
+              <textarea
+                name=""
+                class="form-control"
+                id="textarea"
+                cols="30"
+                rows="5"
+              ></textarea>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal"
+                onclick="resetForm();"
+              >
+                Close
+              </button>
+              <button type="submit" id="add" class="btn btn-primary">
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <h5 class="text-center my-3">Tasks</h5>
+
+      <div id="tasks"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      let currentFilter = "all"; // Default filter
+      let currentSort = "date"; // Default sorting
+
+      let filterTasks = () => {
+        currentFilter = document.getElementById("filter").value;
+        createTasks();
+      };
+
+      let sortTasks = () => {
+        currentSort = document.getElementById("sort").value;
+        createTasks();
+      };
+
+      let form = document.getElementById("form");
+      let textInput = document.getElementById("textInput");
+      let dateInput = document.getElementById("dateInput");
+      let textarea = document.getElementById("textarea");
+      let msg = document.getElementById("msg");
+      let tasks = document.getElementById("tasks");
+      let add = document.getElementById("add");
+      let isEditing = false;
+      dateInput.min = new Date().toISOString().split("T")[0];
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        formValidation();
+      });
+      let resetAddButton = () => {
+        // Reset the button text to "Add"
+        add.innerHTML = "Add";
+        // Reset the isEditing variable
+        isEditing = false;
+      };
+      let formValidation = () => {
+        if (textInput.value === "") {
+          console.log("failure");
+          msg.innerHTML = "Task cannot be blank";
+        } else {
+          console.log("success");
+          msg.innerHTML = "";
+          if (isEditing) {
+            // Change button text to "Save" when in edit mode
+            add.innerHTML = "Save";
+          } else {
+            // Change button text back to "Add" when in add mode
+            add.innerHTML = "Add";
+          }
+          acceptData();
+          add.setAttribute("data-bs-dismiss", "modal");
+          add.click();
+
+          (() => {
+            add.setAttribute("data-bs-dismiss", "");
+            resetAddButton();
+          })();
+        }
+      };
+
+      let data = [{}];
+
+      let acceptData = () => {
+        const category = document.querySelector(
+          'input[name="category"]:checked'
+        ).value;
+
+        data.push({
+          text: textInput.value,
+          date: dateInput.value,
+          description: textarea.value,
+          priority: document.getElementById("priorityCheckbox").checked,
+          category: category,
+        });
+
+        localStorage.setItem("data", JSON.stringify(data));
+        console.log(data);
+        createTasks();
+      };
+
+      let createTasks = () => {
+        tasks.innerHTML = "";
+
+        let filteredData = data.filter((task) => {
+          if (currentFilter === "all") {
+            return true; // Show all tasks
+          } else {
+            // Adjust this condition based on your task categories
+            return task.category === currentFilter;
+          }
+        });
+
+        if (currentSort === "date") {
+          filteredData.sort((a, b) => new Date(a.date) - new Date(b.date));
+        } else if (currentSort === "priority") {
+          filteredData.sort((a, b) => (a.priority ? -1 : 1));
+        }
+
+        filteredData.forEach((x, y) => {
+          tasks.innerHTML += `
+        <div id=${y}>
+            <span class="badge bg-info">${x.category}</span>
+            <span class="badge ${
+              x.priority ? "bg-warning" : "d-none"
+            }">Priority</span>
+            <span class="fw-bold">${x.text}</span>
+            <span class="small text-secondary">${x.date}</span>
+            <p>${x.description}</p>
+  
+            <span class="options">
+                <i onClick="editTask(this)" data-bs-toggle="modal" data-bs-target="#form" class="fas fa-edit"></i>
+                <i onClick="deleteTask(this);createTasks()" class="fas fa-trash-alt"></i>
+            </span>
+        </div>
+    `;
+        });
+
+        resetForm();
+      };
+
+      let deleteTask = (e) => {
+        e.parentElement.parentElement.remove();
+        data.splice(e.parentElement.parentElement.id, 1);
+        localStorage.setItem("data", JSON.stringify(data));
+        console.log(data);
+      };
+      let deleteAllTasks = () => {
+        data = []; // Clear the task data array
+        localStorage.setItem("data", JSON.stringify(data));
+        createTasks(); // Update the task list display
+      };
+
+      let editTask = (e) => {
+        let selectedTask = e.parentElement.parentElement;
+
+        textInput.value = selectedTask.querySelector(".fw-bold").innerHTML;
+        dateInput.value = selectedTask.querySelector(".small").innerHTML;
+        textarea.value = selectedTask.querySelector("p").innerHTML;
+
+        // Assuming that the priority checkbox is checked based on the presence of the 'bg-warning' class
+        document.getElementById("priorityCheckbox").checked = selectedTask
+          .querySelector(".badge")
+          .classList.contains("bg-warning");
+        isEditing = true;
+        // Change button text to "Save" when in edit mode
+        add.innerHTML = "Save";
+      };
+
+      let resetForm = () => {
+        textInput.value = "";
+        dateInput.value = "";
+        textarea.value = "";
+        resetAddButton();
+      };
+
+      (() => {
+        data = JSON.parse(localStorage.getItem("data")) || [];
+        console.log(data);
+        createTasks();
+      })();
+    </script>
+  </body>
+</html>
