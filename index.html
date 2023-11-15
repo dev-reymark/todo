@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-    />
-
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,6 +8,10 @@
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
     />
 
     <style>
@@ -125,7 +124,6 @@
       <h4 class="mb-3">TODO APP</h4>
 
       <div class="filter-sort">
-        <!-- Replace the labels with icons -->
         <i class="fas fa-filter"></i>
         <select id="filter" onchange="filterTasks()">
           <option value="all">All</option>
@@ -138,9 +136,8 @@
           <option value="date">Due Date</option>
           <option value="priority">Priority</option>
         </select>
-      </div>
         <i class="fas fa-trash-alt" onclick="deleteAllTasks()"></i>
- 
+      </div>
 
       <div id="addNew" data-bs-toggle="modal" data-bs-target="#form">
         <span>Add New Task</span>
@@ -223,25 +220,20 @@
       </form>
 
       <h5 class="text-center my-3">Tasks</h5>
-
       <div id="tasks"></div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      let currentFilter = "all"; // Default filter
-      let currentSort = "date"; // Default sorting
-
+      let currentFilter = "all";
+      let currentSort = "date";
       let filterTasks = () => {
         currentFilter = document.getElementById("filter").value;
         createTasks();
       };
-
       let sortTasks = () => {
         currentSort = document.getElementById("sort").value;
         createTasks();
       };
-
       let form = document.getElementById("form");
       let textInput = document.getElementById("textInput");
       let dateInput = document.getElementById("dateInput");
@@ -250,16 +242,16 @@
       let tasks = document.getElementById("tasks");
       let add = document.getElementById("add");
       let isEditing = false;
+
       dateInput.min = new Date().toISOString().split("T")[0];
 
       form.addEventListener("submit", (e) => {
         e.preventDefault();
         formValidation();
       });
+
       let resetAddButton = () => {
-        // Reset the button text to "Add"
         add.innerHTML = "Add";
-        // Reset the isEditing variable
         isEditing = false;
       };
       let formValidation = () => {
@@ -270,16 +262,13 @@
           console.log("success");
           msg.innerHTML = "";
           if (isEditing) {
-            // Change button text to "Save" when in edit mode
             add.innerHTML = "Save";
           } else {
-            // Change button text back to "Add" when in add mode
             add.innerHTML = "Add";
           }
           acceptData();
           add.setAttribute("data-bs-dismiss", "modal");
           add.click();
-
           (() => {
             add.setAttribute("data-bs-dismiss", "");
             resetAddButton();
@@ -288,7 +277,6 @@
       };
 
       let data = [{}];
-
       let acceptData = () => {
         const category = document.querySelector(
           'input[name="category"]:checked'
@@ -309,12 +297,10 @@
 
       let createTasks = () => {
         tasks.innerHTML = "";
-
         let filteredData = data.filter((task) => {
           if (currentFilter === "all") {
-            return true; // Show all tasks
+            return true;
           } else {
-            // Adjust this condition based on your task categories
             return task.category === currentFilter;
           }
         });
@@ -343,7 +329,6 @@
         </div>
     `;
         });
-
         resetForm();
       };
 
@@ -354,9 +339,9 @@
         console.log(data);
       };
       let deleteAllTasks = () => {
-        data = []; // Clear the task data array
+        data = [];
         localStorage.setItem("data", JSON.stringify(data));
-        createTasks(); // Update the task list display
+        createTasks();
       };
 
       let editTask = (e) => {
@@ -365,23 +350,18 @@
         textInput.value = selectedTask.querySelector(".fw-bold").innerHTML;
         dateInput.value = selectedTask.querySelector(".small").innerHTML;
         textarea.value = selectedTask.querySelector("p").innerHTML;
-
-        // Assuming that the priority checkbox is checked based on the presence of the 'bg-warning' class
         document.getElementById("priorityCheckbox").checked = selectedTask
           .querySelector(".badge")
           .classList.contains("bg-warning");
         isEditing = true;
-        // Change button text to "Save" when in edit mode
         add.innerHTML = "Save";
       };
-
       let resetForm = () => {
         textInput.value = "";
         dateInput.value = "";
         textarea.value = "";
         resetAddButton();
       };
-
       (() => {
         data = JSON.parse(localStorage.getItem("data")) || [];
         console.log(data);
