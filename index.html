@@ -16,53 +16,66 @@
 
     <style>
       body {
-        font-family: sans-serif;
-        margin: 0 50px;
-        background-color: #ffffff;
-        overflow: hidden;
+        font-family: "Arial", sans-serif;
+        background-color: #f0f0f0;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
+        min-height: 100vh;
+        margin: 0;
       }
 
       .app {
         background-color: #fff;
         width: 370px;
-        height: 500px;
         border: 5px solid #5150ff;
         border-radius: 8px;
         padding: 16px;
         overflow-y: scroll;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       }
 
       .app::-webkit-scrollbar {
-        width: 0 !important;
+        width: 8px;
+      }
+
+      .app::-webkit-scrollbar-thumb {
+        background-color: #5150ff;
+        border-radius: 4px;
+      }
+
+      .app::-webkit-scrollbar-track {
+        background-color: #f0f0f0;
       }
 
       .filter-sort {
-        margin-bottom: 10px;
+        margin-bottom: 20px;
       }
 
       #addNew {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background-color: rgb(161 171 206 / 35%);
+        background-color: #5150ff;
         padding: 10px;
         border-radius: 5px;
         cursor: pointer;
+        color: #fff;
+      }
+
+      #addNew:hover {
+        background-color: #3f3dcb;
       }
 
       .fa-plus {
-        background-color: #5150ff;
         padding: 5px;
         border-radius: 5px;
-        color: #fff;
       }
+
       .filter-sort i {
         cursor: pointer;
-        margin-left: 10px; /* Adjust the spacing */
+        margin-left: 10px;
+        color: #5150ff;
       }
 
       #tasks {
@@ -74,34 +87,36 @@
       #tasks div {
         position: relative;
         border: 3px solid #5150ff;
-        background-color: #5150ff2b;
-        border-radius: 6px;
-        padding: 8px;
-        display: grid;
-        gap: 5px;
+        background-color: #fff;
+        border-radius: 8px;
+        padding: 16px;
         margin-bottom: 14px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
       #tasks div .badge {
-        position: absolute;
-        top: 0;
-        right: 0;
-        margin: 5px;
+        flex-shrink: 0;
       }
 
       #tasks div .options {
-        justify-self: center;
+        justify-self: flex-end;
         display: flex;
-        gap: 20px;
+        gap: 12px;
       }
 
       #tasks div .options i {
         cursor: pointer;
+        color: #5150ff;
       }
 
+      .task-item {
+        position: relative;
+      }
       #msg {
         color: red;
+        margin-top: 10px;
       }
+
       select {
         padding: 8px;
         border: 1px solid #ccc;
@@ -112,9 +127,13 @@
         outline: none;
       }
 
-      option {
-        background-color: #fff;
-        color: #333;
+      .options {
+        display: flex;
+        justify-content: center;
+      }
+
+      .options i {
+        margin: 0 5px;
       }
     </style>
   </head>
@@ -136,7 +155,26 @@
           <option value="date">Due Date</option>
           <option value="priority">Priority</option>
         </select>
-        <i class="fas fa-trash-alt" onclick="deleteAllTasks()"></i>
+
+        <i
+          class="fas fa-trash-alt"
+          onclick="deleteAllTasks()"
+          data-bs-toggle="tooltip"
+          data-bs-placement="top"
+          title="Delete All Tasks"
+        ></i>
+
+        <button class="btn btn-info" onclick="archiveCompletedTasks()">
+          Archive Completed Tasks
+        </button>
+        <label>
+          <input
+            type="checkbox"
+            id="showArchivedCheckbox"
+            onchange="toggleShowArchived()"
+          />
+          Show Archived Tasks
+        </label>
       </div>
 
       <div id="addNew" data-bs-toggle="modal" data-bs-target="#form">
@@ -223,6 +261,7 @@
       <div id="tasks"></div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
     <script>
       let currentFilter = "all";
       let currentSort = "date";
@@ -244,6 +283,7 @@
       let isEditing = false;
 
       dateInput.min = new Date().toISOString().split("T")[0];
+      dateInput.value = new Date().toISOString().split("T")[0];
 
       form.addEventListener("submit", (e) => {
         e.preventDefault();
@@ -282,21 +322,70 @@
           'input[name="category"]:checked'
         ).value;
 
-        data.push({
-          text: textInput.value,
-          date: dateInput.value,
-          description: textarea.value,
-          priority: document.getElementById("priorityCheckbox").checked,
-          category: category,
-        });
+        if (isEditing) {
+          // If editing, update the existing task
+          const taskId = parseInt(
+            document.getElementById("addNew").getAttribute("data-task-id")
+          );
+          data[taskId] = {
+            text: textInput.value,
+            date: dateInput.value,
+            description: textarea.value,
+            priority: document.getElementById("priorityCheckbox").checked,
+            category: category,
+            completed: false,
+          };
+          Swal.fire({
+            icon: "success",
+            title: "Task Updated",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        } else {
+          // If adding a new task, create a new task
+          data.push({
+            text: textInput.value,
+            date: dateInput.value,
+            description: textarea.value,
+            priority: document.getElementById("priorityCheckbox").checked,
+            category: category,
+          });
+          Swal.fire({
+            icon: "success",
+            title: "Task Added",
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 2000,
+          });
+        }
 
         localStorage.setItem("data", JSON.stringify(data));
-        console.log(data);
         createTasks();
       };
 
+      let showArchived = false;
+
       let createTasks = () => {
         tasks.innerHTML = "";
+
+        let tasksToDisplay = showArchived
+          ? data.filter((task) => task.completed)
+          : data;
+
+        if (tasksToDisplay.length === 0) {
+          tasks.innerHTML = `<p>No tasks ${
+            showArchived ? "in the archive" : "created yet"
+          }.</p>`;
+          return;
+        }
+
+        if (data.length === 0) {
+          tasks.innerHTML = "<p>No tasks created yet.</p>";
+          return;
+        }
         let filteredData = data.filter((task) => {
           if (currentFilter === "all") {
             return true;
@@ -312,36 +401,103 @@
         }
 
         filteredData.forEach((x, y) => {
+          const taskDate = new Date(x.date);
+          // Create an array of day names
+          const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+          // Get the day name based on the index of the day in the array
+          const dayOfWeek = daysOfWeek[taskDate.getDay()];
+
           tasks.innerHTML += `
-        <div id=${y}>
-            <span class="badge bg-info">${x.category}</span>
-            <span class="badge ${
-              x.priority ? "bg-warning" : "d-none"
-            }">Priority</span>
-            <span class="fw-bold">${x.text}</span>
-            <span class="small text-secondary">${x.date}</span>
-            <p>${x.description}</p>
-  
-            <span class="options">
-                <i onClick="editTask(this)" data-bs-toggle="modal" data-bs-target="#form" class="fas fa-edit"></i>
-                <i onClick="deleteTask(this);createTasks()" class="fas fa-trash-alt"></i>
-            </span>
-        </div>
-    `;
+          <div id=${y} class="task-item" ${
+            x.completed ? 'style="opacity: 0.6;"' : ""
+          }>
+      <span class="badge bg-info">${x.category}</span>
+      <span class="badge ${
+        x.priority ? "bg-warning" : "d-none"
+      }">Priority</span>
+      <span class="small text-secondary">${dayOfWeek}, ${x.date}</span>
+      <br />
+      <span class="fw-bold">${x.text}</span>
+      <p>${x.description}</p>
+      <span class="options">
+        <span id="completedCheckbox_${y}" class="checkbox" onclick="toggleCompleted(${y})">
+  <i class="fas fa-check"></i>
+</span>
+        <i onClick="editTask(this)" data-bs-toggle="modal" data-bs-target="#form" class="fas fa-edit"></i>
+        <i onClick="deleteTask(this);createTasks()" class="fas fa-trash-alt"></i>
+      </span>
+    </div>
+  `;
         });
         resetForm();
       };
 
-      let deleteTask = (e) => {
-        e.parentElement.parentElement.remove();
-        data.splice(e.parentElement.parentElement.id, 1);
-        localStorage.setItem("data", JSON.stringify(data));
-        console.log(data);
-      };
-      let deleteAllTasks = () => {
-        data = [];
-        localStorage.setItem("data", JSON.stringify(data));
+      // New function to toggle between viewing active and archived tasks
+      let toggleShowArchived = () => {
+        showArchived = document.getElementById("showArchivedCheckbox").checked;
         createTasks();
+      };
+
+      let deleteTask = (e) => {
+        Swal.fire({
+          title: "Are you sure?",
+          text: "This action will delete the selected task!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, delete it!",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // If the user confirms, delete the task
+            let selectedTask = e.parentElement.parentElement;
+            selectedTask.remove();
+            data.splice(selectedTask.id, 1);
+            localStorage.setItem("data", JSON.stringify(data));
+            createTasks();
+
+            Swal.fire({
+              icon: "success",
+              title: "The task has been deleted",
+              toast: true,
+              position: "top-end",
+              showConfirmButton: false,
+              timer: 2000,
+            });
+          }
+        });
+      };
+
+      let deleteAllTasks = () => {
+        if (data.length === 0) {
+          // Show a SweetAlert message if there are no tasks to delete
+          Swal.fire({
+            icon: "info",
+            title: "No Tasks",
+            text: "There are no tasks to delete.",
+          });
+          return;
+        }
+
+        // Use SweetAlert for confirmation
+        Swal.fire({
+          title: "Are you sure?",
+          text: "This action will delete all tasks!",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes, delete all!",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // If user confirms, delete all tasks
+            data = [];
+            localStorage.setItem("data", JSON.stringify(data));
+            createTasks();
+            Swal.fire("Deleted!", "All tasks have been deleted.", "success");
+          }
+        });
       };
 
       let editTask = (e) => {
@@ -350,15 +506,23 @@
         textInput.value = selectedTask.querySelector(".fw-bold").innerHTML;
         dateInput.value = selectedTask.querySelector(".small").innerHTML;
         textarea.value = selectedTask.querySelector("p").innerHTML;
-        document.getElementById("priorityCheckbox").checked = selectedTask
-          .querySelector(".badge")
-          .classList.contains("bg-warning");
+
+        // Set the checkbox state based on the existing task's priority
+        document.getElementById("priorityCheckbox").checked =
+          selectedTask.querySelector(".badge.bg-warning") !== null;
+
         isEditing = true;
         add.innerHTML = "Save";
+
+        // Set the task ID as an attribute to the "Add New Task" button
+        document
+          .getElementById("addNew")
+          .setAttribute("data-task-id", selectedTask.id);
       };
+
       let resetForm = () => {
         textInput.value = "";
-        dateInput.value = "";
+        dateInput.value = new Date().toISOString().split("T")[0];
         textarea.value = "";
         resetAddButton();
       };
@@ -367,6 +531,56 @@
         console.log(data);
         createTasks();
       })();
+
+      // Add this line to initialize Bootstrap tooltips
+      var tooltipTriggerList = [].slice.call(
+        document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      );
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+
+      function toggleCompleted(taskId) {
+        // Toggle the completed status
+        data[taskId].completed = !data[taskId].completed;
+        localStorage.setItem("data", JSON.stringify(data));
+        createTasks();
+      }
+
+      // New function to archive completed tasks
+      let archiveCompletedTasks = () => {
+        let completedTasks = data.filter((task) => task.completed);
+
+        if (completedTasks.length === 0) {
+          // Show a SweetAlert message if there are no completed tasks to archive
+          Swal.fire({
+            icon: "info",
+            title: "No Completed Tasks",
+            text: "There are no completed tasks to archive.",
+          });
+          return;
+        }
+
+        // Move completed tasks to the archive or a separate data array
+        // You can customize this based on your specific implementation
+        // For example, you might want to move completed tasks to a different array or storage key
+        data = data.filter((task) => !task.completed);
+
+        // Optionally, you can add an "archived" property to tasks and set it to true
+        // to distinguish archived tasks from active tasks in your data structure
+
+        localStorage.setItem("data", JSON.stringify(data));
+        createTasks();
+
+        Swal.fire({
+          icon: "success",
+          title: "Completed Tasks Archived",
+          toast: true,
+          position: "top-end",
+          showConfirmButton: false,
+          timer: 2000,
+        });
+      };
     </script>
   </body>
 </html>
